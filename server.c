@@ -245,14 +245,90 @@ int main(int argc, char * argv[])
 	fcntl(0, F_SETFL, fcntl(0, F_GETFL)| O_NONBLOCK);
 	print_prompt("admin");
 
-	//
+/* ------------------------YOUR CODE FOR MAIN-------------------------------------------------------------------------------------------*/
+
+	int len=0;//for string length later
+
 	while(1) {
-		/* ------------------------YOUR CODE FOR MAIN--------------------------------*/
+		
 
 		// Handling a new connection using get_connection
 		int pipe_SERVER_reading_from_child[2];
 		int pipe_SERVER_writing_to_child[2];
 		char user_id[MAX_USER_ID];
+
+		int pipe_child_writing_to_user[2];
+		int pipe_child_reading_from_user[2];
+		int pid=0;
+
+		
+
+	
+		if((get_connection(user_id, pipe_child_writing_to_user,pipe_child_reading_from_user))!=-1){
+			// Create two pipes for bidirectional communication with child process and create child process (via fork?)
+
+			if (pipe(pipe_SERVER_reading_from_child) < 0 || pipe(pipe_SERVER_writing_to_child) < 0) {
+				perror("Failed to create pipes\n");
+				exit(-1); //?
+			}
+
+			if((pid=fork()) == -1){
+				perror("Failed to fork");
+			}
+			if(pid==0){
+				// Child process: poll users and SERVER
+
+				//close unused ends
+				close(pipe_child_writing_to_user[0]);
+				close(pipe_child_reading_from_user[1]);
+
+				while(1){
+
+				if ((nbytes=read(pipe_child_reading_from_user[0],buf,MAX_MSG))>0){
+					len=strlen(buf);
+					write(1,"Child:",6);//for warm-up
+					write(1,buf,len);   //for warm-up
+					write(pipe_SERVER_reading_from_child[1],buf,len);
+				}
+				
+				sleep(2);//slow down polling
+
+			    }
+
+			}
+			else{
+				// Server process: Add a new user information into an empty slot
+				//close unused ends
+				
+				close(pipe_SERVER_reading_from_child[1]);
+				close(pipe_SERVER_writing_to_child[0]);
+				fcntl(pipe_SERVER_reading_from_child[0],F_SETFL | O_NONBLOCK);
+
+				while(1){
+					if((nbytes=read(pipe_SERVER_reading_from_child[0],buf,MAX_MSG))>0){
+						//do stuff with user input here
+						len=strlen(buf);
+						write(1,"Server:",7); //for warm-up
+						write(1,buf,len);     //for warm-up
+						print_prompt("admin");//keep design
+					}
+					else{
+						if((nbytes=read(0,buf, MAX_MSG))>0){
+						print_prompt("admin");//keep design for warm-up
+						}
+						//Do stuff with admin input here later
+					}
+
+				sleep(2);//only terminate loop if admin types exit command
+			    }
+			}
+			
+		}
+
+		
+	
+		
+         /***Comments below are from original project file, I kept them to make sure we do all of those things above****/
 
 		// Check max user and same user id
 
@@ -261,8 +337,12 @@ int main(int argc, char * argv[])
 		// Server process: Add a new user information into an empty slot   
 		// poll child processes and handle user commands
 		// Poll stdin (input from the terminal) and handle admnistrative command
+
+		//printf(buf);
+		
+		sleep(2);
 	
-		/* ------------------------YOUR CODE FOR MAIN--------------------------------*/
+		/* ------------------------YOUR CODE FOR MAIN------------------------------------------------------------------------------------*/
 	}
 }
 
