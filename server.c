@@ -75,12 +75,12 @@ int list_users(int idx, USER * user_list)
  */
 int add_user(int idx, USER * user_list, int pid, char * user_id, int pipe_to_child, int pipe_to_parent)
 {
-  user_list[i].m_pid = pid;
-  user_list[i].m_user_id = user_id;
-  user_list[i].m_fd_to_user = pipe_to_child;
-  user_list[i].m_fd_to_server = pipe_to_parent;
-  user_list[i].m_status = SLOT_FULL;
-  return 1
+  user_list[idx].m_pid = pid;
+  *user_list[idx].m_user_id = user_id;
+  user_list[idx].m_fd_to_user = pipe_to_child;
+  user_list[idx].m_fd_to_server = pipe_to_parent;
+  user_list[idx].m_status = SLOT_FULL;
+  return 1;
 }
 
 /*
@@ -116,11 +116,11 @@ void kick_user(int idx, USER * user_list) {
  */
 int broadcast_msg(USER * user_list, char *buf, char *sender)
 {
-  for(int i )
+  //for(int i )
 	//iterate over the user_list and if a slot is full, and the user is not the sender itself,
 	//then send the message to that user
 	//return zero on success
-	return 0;
+	//return 0;
 }
 
 /*
@@ -279,17 +279,16 @@ int main(int argc, char * argv[])
 			}
 
 			if((pid=fork()) == -1){
-				perror("Failed to fork");  ?//get pid add user to user_list
+				perror("Failed to fork");  //get pid add user to user_list
 			}
 			int curpid = getpid();
 			int slot = find_empty_slot(user_list);
 			if( slot == -1){
 				perror("No more empty slots");
-			else{
-				add_user(slot,user_list,curpid,user_id,pipe_SERVER_writing_to_child,pipe_SERVER_reading_from_child)
-			if(pid==0){ //
-				// Child process: poll users and SERVER
-
+			}else{
+				add_user(slot,user_list,curpid,user_id,pipe_SERVER_writing_to_child[1],pipe_SERVER_reading_from_child[0]);
+			
+			if(pid==0){ // Child process: poll users and SERVER
 				//close unused ends
 				close(pipe_child_writing_to_user[0]);
 				close(pipe_child_reading_from_user[1]);
@@ -315,13 +314,13 @@ int main(int argc, char * argv[])
 				close(pipe_SERVER_reading_from_child[1]);
 				close(pipe_SERVER_writing_to_child[0]);
 				fcntl(pipe_SERVER_reading_from_child[0],F_SETFL | O_NONBLOCK);
-        int i = 0;
+       				 int i = 0;
 				for(int i= 0; i < MAX_USER; i++){ //poll all the children(loop through user list) and read if there if available
-          if(user_list[i].m_status == SLOT_EMPTY){
-              continue;
-          } // go to next iteration if no user at this position
+         				 if(user_list[i].m_status == SLOT_EMPTY){
+             					 continue;
+          				 } // go to next iteration if no user at this position
 
-					if((nbytes=read(user_list[i].m_fd_to_server[0],buf,MAX_MSG))>0){ //see if anything in pipe of for server to read from current user
+					if((nbytes=read(user_list[i].m_fd_to_server,buf,MAX_MSG))>0){ //see if anything in pipe of for server read from current user
 						//do stuff with user input here
 						len=strlen(buf);
 						write(1,"Server:",7); //for warm-up
@@ -330,11 +329,10 @@ int main(int argc, char * argv[])
 					}
 					else{
 						if((nbytes=read(0,buf, MAX_MSG))>0){
-						print_prompt("admin");
-            //keep design for warm-up
+						print_prompt("admin");//keep design for warm-up
 						}
-				    //Do stuff with admin input here later
-					}
+				    			//Do stuff with admin input here later
+						}
 
 				sleep(2);//only terminate loop if admin types exit command
 			    }
@@ -362,5 +360,5 @@ int main(int argc, char * argv[])
 		/* ------------------------YOUR CODE FOR MAIN------------------------------------------------------------------------------------*/
 	}
 }
-
+}
 /* --------------------End of the main function ----------------------------------------*/
