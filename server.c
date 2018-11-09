@@ -1,4 +1,4 @@
-#include <stdio.h> 
+#include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -59,7 +59,7 @@ int list_users(int idx, USER * user_list)
 	}
 
 	if(idx < 0) {
-		printf(buf);
+		printf("%s",buf);
 		printf("\n");
 	} else {
 		/* write to the given pipe fd */
@@ -75,9 +75,12 @@ int list_users(int idx, USER * user_list)
  */
 int add_user(int idx, USER * user_list, int pid, char * user_id, int pipe_to_child, int pipe_to_parent)
 {
-	// populate the user_list structure with the arguments passed to this function
-	// return the index of user added
-	return 0;
+  user_list[i].m_pid = pid;
+  user_list[i].m_user_id = user_id;
+  user_list[i].m_fd_to_user = pipe_to_child;
+  user_list[i].m_fd_to_server = pipe_to_parent;
+  user_list[i].m_status = SLOT_FULL;
+  return 1
 }
 
 /*
@@ -113,6 +116,7 @@ void kick_user(int idx, USER * user_list) {
  */
 int broadcast_msg(USER * user_list, char *buf, char *sender)
 {
+  for(int i )
 	//iterate over the user_list and if a slot is full, and the user is not the sender itself,
 	//then send the message to that user
 	//return zero on success
@@ -200,7 +204,7 @@ void send_p2p_msg(int idx, USER * user_list, char *buf)
 
 	// get the target user by name using extract_name() function
 	// find the user id using find_user_index()
-	// if user not found, write back to the original user "User not found", using the write()function on pipes. 
+	// if user not found, write back to the original user "User not found", using the write()function on pipes.
 	// if the user is found then write the message that the user wants to send to that user.
 }
 
@@ -236,21 +240,23 @@ void init_user_list(USER * user_list) {
 int main(int argc, char * argv[])
 {
 	int nbytes;
-	setup_connection("YOUR_UNIQUE_ID"); // Specifies the connection point as argument.
+	setup_connection("me"); // Specifies the connection point as argument.
 
 	USER user_list[MAX_USER];
 	init_user_list(user_list);   // Initialize user list
 
-	char buf[MAX_MSG]; 
+	char buf[MAX_MSG];
 	fcntl(0, F_SETFL, fcntl(0, F_GETFL)| O_NONBLOCK);
 	print_prompt("admin");
+
+
 
 /* ------------------------YOUR CODE FOR MAIN-------------------------------------------------------------------------------------------*/
 
 	int len=0;//for string length later
 
 	while(1) {
-		
+
 
 		// Handling a new connection using get_connection
 		int pipe_SERVER_reading_from_child[2];
@@ -261,9 +267,9 @@ int main(int argc, char * argv[])
 		int pipe_child_reading_from_user[2];
 		int pid=0;
 
-		
 
-	
+
+
 		if((get_connection(user_id, pipe_child_writing_to_user,pipe_child_reading_from_user))!=-1){
 			// Create two pipes for bidirectional communication with child process and create child process (via fork?)
 
@@ -273,9 +279,15 @@ int main(int argc, char * argv[])
 			}
 
 			if((pid=fork()) == -1){
-				perror("Failed to fork");
+				perror("Failed to fork");  ?//get pid add user to user_list
 			}
-			if(pid==0){
+			int curpid = getpid();
+			int slot = find_empty_slot(user_list);
+			if( slot == -1){
+				perror("No more empty slots");
+			else{
+				add_user(slot,user_list,curpid,user_id,pipe_SERVER_writing_to_child,pipe_SERVER_reading_from_child)
+			if(pid==0){ //
 				// Child process: poll users and SERVER
 
 				//close unused ends
@@ -290,7 +302,7 @@ int main(int argc, char * argv[])
 					write(1,buf,len);   //for warm-up
 					write(pipe_SERVER_reading_from_child[1],buf,len);
 				}
-				
+
 				sleep(2);//slow down polling
 
 			    }
@@ -299,13 +311,17 @@ int main(int argc, char * argv[])
 			else{
 				// Server process: Add a new user information into an empty slot
 				//close unused ends
-				
+
 				close(pipe_SERVER_reading_from_child[1]);
 				close(pipe_SERVER_writing_to_child[0]);
 				fcntl(pipe_SERVER_reading_from_child[0],F_SETFL | O_NONBLOCK);
+        int i = 0;
+				for(int i= 0; i < MAX_USER; i++){ //poll all the children(loop through user list) and read if there if available
+          if(user_list[i].m_status == SLOT_EMPTY){
+              continue;
+          } // go to next iteration if no user at this position
 
-				while(1){
-					if((nbytes=read(pipe_SERVER_reading_from_child[0],buf,MAX_MSG))>0){
+					if((nbytes=read(user_list[i].m_fd_to_server[0],buf,MAX_MSG))>0){ //see if anything in pipe of for server to read from current user
 						//do stuff with user input here
 						len=strlen(buf);
 						write(1,"Server:",7); //for warm-up
@@ -314,34 +330,35 @@ int main(int argc, char * argv[])
 					}
 					else{
 						if((nbytes=read(0,buf, MAX_MSG))>0){
-						print_prompt("admin");//keep design for warm-up
+						print_prompt("admin");
+            //keep design for warm-up
 						}
-						//Do stuff with admin input here later
+				    //Do stuff with admin input here later
 					}
 
 				sleep(2);//only terminate loop if admin types exit command
 			    }
 			}
-			
+
 		}
 
-		
-	
-		
+
+
+
          /***Comments below are from original project file, I kept them to make sure we do all of those things above****/
 
 		// Check max user and same user id
 
 		// Child process: poli users and SERVER
 
-		// Server process: Add a new user information into an empty slot   
+		// Server process: Add a new user information into an empty slot
 		// poll child processes and handle user commands
 		// Poll stdin (input from the terminal) and handle admnistrative command
 
 		//printf(buf);
-		
+
 		sleep(2);
-	
+
 		/* ------------------------YOUR CODE FOR MAIN------------------------------------------------------------------------------------*/
 	}
 }
