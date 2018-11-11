@@ -39,6 +39,10 @@ void main(int argc, char * argv[]) {
 			len=strlen(buf);
 			write(pipe_user_writing_to_server[1],buf,len);
 		}
+		memset(buf,'\0',MAX_MSG);
+		if((nbytes=read(pipe_user_reading_from_server[0],buf,MAX_MSG)>0)){
+			printf("%s",buf);
+		}
 
 	sleep(2);//only terminate loop if user types exit command - do later
 

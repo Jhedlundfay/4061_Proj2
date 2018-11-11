@@ -88,7 +88,7 @@ int add_user(int idx, USER * user_list, int pid, char * user_id, int pipe_to_chi
  */
 void kill_user(int idx, USER * user_list) {
   int status;
-  kill(user_list[idx].m_pid,SIGKILL);
+  kill(0,SIGKILL);
   waitpid(user_list[idx].m_pid,&status,0);
 }
 
@@ -319,6 +319,8 @@ int main(int argc, char * argv[])
 		       }
       else if(pid==0){ // Child process: poll users and SERVER
 				     //close unused ends
+            fcntl(pipe_child_reading_from_user[0],F_SETFL,fcntl(pipe_child_reading_from_user[0],F_GETFL)|O_NONBLOCK);
+            fcntl(pipe_SERVER_writing_to_child[0],F_SETFL,fcntl(pipe_SERVER_writing_to_child[0],F_GETFL)|O_NONBLOCK);
     				close(pipe_child_writing_to_user[0]);
     				close(pipe_child_reading_from_user[1]);
            	close(pipe_SERVER_writing_to_child[1]);
@@ -338,6 +340,14 @@ int main(int argc, char * argv[])
                      //for warm-up
         				}
 
+                memset(buf,'\0',MAX_MSG);
+                if ((nbytes=read(pipe_SERVER_writing_to_child[0],buf,MAX_MSG))>0){
+        					  write(pipe_child_writing_to_user[1],buf,nbytes);
+                     //for warm-up
+        				}else{
+                    write(0,"terret",6);
+                }
+
               usleep(1000);
       				//slow down polling?
 				}
@@ -353,6 +363,8 @@ int main(int argc, char * argv[])
 
       if(strncmp(buf,"\\list",4)==0){
         list_users(-1,user_list);
+        extract_name(buf,username);
+        broadcast_msg(user_list,buf,username);
       }
       else if(strncmp(buf,"\\kick",4)==0){
         extract_name(buf,username);
@@ -372,8 +384,9 @@ int main(int argc, char * argv[])
           exit(0);
           }
       else{
-        extract_name(buf,username);
-        broadcast_msg(user_list,buf,username);
+
+        broadcast_msg(user_list,buf,"huh");
+        printf("writing to child");
       }
       }
 
@@ -392,8 +405,7 @@ int main(int argc, char * argv[])
 
             		if(user_list[i].m_status == SLOT_FULL){   //check if index has user present.
         			       if((nbytes=read(user_list[i].m_fd_to_server,buf,MAX_MSG))>0){
-                     //print the user pipe contents
-
+                     write(user_list[i].m_fd_to_user,"hello",5);
                      printf("the length of buf is %ld",strlen(buf));
                      printf("%s",buf);
 
