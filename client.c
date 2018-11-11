@@ -42,10 +42,12 @@ void main(int argc, char * argv[]) {
 		}
 		memset(buf,'\0',MAX_MSG);
 		if((nbytes=read(pipe_user_reading_from_server[0],buf,MAX_MSG)>0)){
-			printf("%s",buf);
+			write(0,buf,MAX_MSG);
+			write(0,"\n",2);
 		}
 
-	sleep(2);//only terminate loop if user types exit command - do later
+
+	usleep(1000);//only terminate loop if user types exit command - do later
 
 	}
 
