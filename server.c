@@ -116,7 +116,7 @@ void cleanup_user(int idx, USER * user_list)
 /*
  * Kills the user and performs cleanup
  */
-void kick_user(int idx, USER * user_  list) {
+void kick_user(int idx, USER * user_list) {
 	// should kill_user()
 	// then perform cleanup_user()
 
@@ -333,7 +333,7 @@ int main(int argc, char * argv[])
 				    char *userIDprint = user_id;
 				    strcat(userIDprint,": ");
     				while(1){
-                memset(buf,'\0',MAX_MSG);
+                memset(buf,0,MAX_MSG);
       					if ((nbytes=read(pipe_child_reading_from_user[0],buf,MAX_MSG))>0){
                   buf[nbytes] = '\0';
         					write(pipe_SERVER_reading_from_child[1],buf,nbytes);
@@ -360,8 +360,11 @@ int main(int argc, char * argv[])
       buf[sizeof(buf)-1] = '\0';
       print_prompt("admin");
       char username[MAX_USER_ID];
+
       if(strncmp(buf,"\\list",4)==0){
         list_users(-1,user_list);
+        extract_name(buf,username);
+        broadcast_msg(user_list,buf,username);
       }
       else if(strncmp(buf,"\\kick",4)==0){
         extract_name(buf,username);
@@ -399,8 +402,8 @@ int main(int argc, char * argv[])
     int i = 0;
 		for(i= 0; i < MAX_USER; i++){
         //poll all the children(loop through user list) and read.
-                memset(buf,'\0',MAX_MSG);
-            		if(user_list[i].m_status == SLOT_FULL){   //check if index has user present.
+                memset(buf,0,MAX_MSG);
+                if(user_list[i].m_status == SLOT_FULL){   //check if index has user present.
         			       if((nbytes=read(user_list[i].m_fd_to_server,buf,MAX_MSG))>0){
 					                  if (strncmp(buf,"\\list",4)==0){
 					                         list_users(i,user_list);
@@ -435,10 +438,11 @@ int main(int argc, char * argv[])
 			}
       usleep(1000);
       //end of for loop
-		  }
+		
+		}
 
 
 	   //end of while
 	    }
 	 //end of main
-	}
+}
