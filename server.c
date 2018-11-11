@@ -306,7 +306,7 @@ int main(int argc, char * argv[])
 			}
 
       if(pid > 0){ //server process adds user here
-	signal(SIGTERM, SIG_IGN);
+	    signal(SIGTERM, SIG_IGN);
             			int curpid = getpid();  //info needed to populate _userInfo
             			int slot = find_empty_slot(user_list);
             			if(slot == -1){
@@ -409,7 +409,7 @@ int main(int argc, char * argv[])
 					                         list_users(i,user_list);
 					                            }
 					                  else if (strncmp(buf,"\\exit",4)==0){
-                                   kick_user(i,user_list[i].m_user_id);
+                                   kick_user(i,user_list);
 					                    }
 					                  else if (strncmp(buf,"\\p2p",3)==0){
                                    int index;
@@ -424,7 +424,7 @@ int main(int argc, char * argv[])
                                      continue;
                                    }
                                    char text[MAX_MSG];
-                                   text = extract_text(buf,text);
+                                   extract_text(buf,text);
                                    send_p2p_msg(index,user_list,text);
 				                  	 }
 					                  else {
@@ -438,7 +438,7 @@ int main(int argc, char * argv[])
 			}
       usleep(1000);
       //end of for loop
-		
+
 		}
 
 
