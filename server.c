@@ -137,7 +137,12 @@ int broadcast_msg(USER * user_list, char *buf, char *sender)
         if(strncmp(sender,"admin",5)==0){
             write(user_list[i].m_fd_to_user,"admin:",6);
         }
+        char username[strlen(sender)+2];
+        strncpy(username,sender,strlen(sender));
+        strcat(username,": ");
+        write(user_list[i].m_fd_to_user,username,strlen(username));
         write(user_list[i].m_fd_to_user,buf,strlen(buf));
+        memset(username,'\0',strlen(sender)+2);
       }
     }
   }
@@ -227,27 +232,32 @@ int extract_text(char *buf, char * text)
 void send_p2p_msg(int idx, USER * user_list, char *buf)
 {
 
-	char *text_to_user;
-        int target_user_index = 0;
+	char text_to_user[MAX_MSG];
+  int target_user_index = 0;
+  char username[MAX_USER_ID+1];
+  strncpy(username,user_list[idx].m_user_id,strlen(user_list[idx].m_user_id));
 	// get the target user by name using extract_name() function
 	char target_user[MAX_USER_ID];
 	extract_name(buf,target_user);
-        target_user[strlen(target_user)-1]='\0';
-	
+  target_user[strlen(target_user)]='\0';
+
 	// find the user id using find_user_index()
 	 if((target_user_index = find_user_index(user_list,target_user))==-1){
 		// if user not found, write back to the original user "User not found", using the write()function on pipes.
-		write(user_list[idx].m_fd_to_user,"User not found",14);
-	 }
-	 else if((extract_text(buf,text_to_user))==-1){
-		write(user_list[idx].m_fd_to_user,"Unable to extract message",25);
+	    write(user_list[idx].m_fd_to_user,"User not found",14);
 	 }
 	 else{// if the user is found then write the message that the user wants to send to that user.
-	
+    if(extract_text(buf,text_to_user)==-1){
+      write(user_list[idx].m_fd_to_user,"Unable to extract message",25);
+    }
+    else{
+    strcat(username,": ");
+    write(user_list[target_user_index].m_fd_to_user,username,strlen(username));
 		write(user_list[target_user_index].m_fd_to_user,text_to_user,strlen(text_to_user));
+  }
 	 }
-	
-	
+
+
 }
 
 //takes in the filename of the file being executed, and prints an error message stating the commands and their usage
@@ -431,7 +441,7 @@ int main(int argc, char * argv[])
                                    kick_user(i,user_list);
 					                    }
 					                  else if (strncmp(buf,"\\p2p",3)==0){
-								send_p2p_msg(i,user_list,buf);
+								                   send_p2p_msg(i,user_list,buf);
                                   /* int index;
                                    char getname[MAX_USER_ID];
                                    if(extract_name(buf,getname)==-1){

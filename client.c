@@ -35,7 +35,7 @@ void main(int argc, char * argv[]) {
 	char buf[MAX_MSG];
 
 	while(1){
-
+		memset(buf,'\0',MAX_MSG);
 		if((nbytes=read(0,buf,MAX_MSG))>0){
 			//send user input to child
 			len=strlen(buf);
