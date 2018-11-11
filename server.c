@@ -88,7 +88,7 @@ int add_user(int idx, USER * user_list, int pid, char * user_id, int pipe_to_chi
  */
 void kill_user(int idx, USER * user_list) {
   int status;
-  kill(0,SIGKILL);
+  kill(user_list[idx].m_pid,SIGTERM);
   waitpid(user_list[idx].m_pid,&status,0);
 }
 
@@ -306,6 +306,7 @@ int main(int argc, char * argv[])
 			}
 
       if(pid > 0){ //server process adds user here
+	signal(SIGTERM, SIG_IGN);
             			int curpid = getpid();  //info needed to populate _userInfo
             			int slot = find_empty_slot(user_list);
             			if(slot == -1){
