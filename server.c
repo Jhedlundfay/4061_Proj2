@@ -227,10 +227,27 @@ int extract_text(char *buf, char * text)
 void send_p2p_msg(int idx, USER * user_list, char *buf)
 {
 
+	char *text_to_user;
+        int target_user_index = 0;
 	// get the target user by name using extract_name() function
+	char target_user[MAX_USER_ID];
+	extract_name(buf,target_user);
+        target_user[strlen(target_user)-1]='\0';
+	
 	// find the user id using find_user_index()
-	// if user not found, write back to the original user "User not found", using the write()function on pipes.
-	// if the user is found then write the message that the user wants to send to that user.
+	 if((target_user_index = find_user_index(user_list,target_user))==-1){
+		// if user not found, write back to the original user "User not found", using the write()function on pipes.
+		write(user_list[idx].m_fd_to_user,"User not found",14);
+	 }
+	 else if((extract_text(buf,text_to_user))==-1){
+		write(user_list[idx].m_fd_to_user,"Unable to extract message",25);
+	 }
+	 else{// if the user is found then write the message that the user wants to send to that user.
+	
+		write(user_list[target_user_index].m_fd_to_user,text_to_user,strlen(text_to_user));
+	 }
+	
+	
 }
 
 //takes in the filename of the file being executed, and prints an error message stating the commands and their usage
@@ -365,8 +382,8 @@ int main(int argc, char * argv[])
 
       if(strncmp(buf,"\\list",4)==0){
         list_users(-1,user_list);
-        extract_name(buf,username);
-        broadcast_msg(user_list,buf,username);
+        //extract_name(buf,username);
+        //broadcast_msg(user_list,buf,username);
       }
       else if(strncmp(buf,"\\kick",4)==0){
         extract_name(buf,username);
@@ -414,7 +431,8 @@ int main(int argc, char * argv[])
                                    kick_user(i,user_list);
 					                    }
 					                  else if (strncmp(buf,"\\p2p",3)==0){
-                                   int index;
+								send_p2p_msg(i,user_list,buf);
+                                  /* int index;
                                    char getname[MAX_USER_ID];
                                    if(extract_name(buf,getname)==-1){
                                      perror("missing user");
@@ -427,7 +445,7 @@ int main(int argc, char * argv[])
                                    }
                                    char text[MAX_MSG];
                                    extract_text(buf,text);
-                                   send_p2p_msg(index,user_list,text);
+                                   send_p2p_msg(index,user_list,text);*/
 				                  	 }
 					                  else {
                                    broadcast_msg(user_list,buf,user_list[i].m_user_id);
