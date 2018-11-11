@@ -134,7 +134,9 @@ int broadcast_msg(USER * user_list, char *buf, char *sender)
   for(int i = 0; i< MAX_USER; i++){
     if(user_list[i].m_status == SLOT_FULL){
       if(user_list[i].m_user_id != sender){
-        write(user_list[i].m_fd_to_user,"admin:",6);
+        if(strncmp(sender,"admin",5)==0){
+            write(user_list[i].m_fd_to_user,"admin:",6);
+        }
         write(user_list[i].m_fd_to_user,buf,strlen(buf));
       }
     }
@@ -385,7 +387,7 @@ int main(int argc, char * argv[])
           }
       else{
 
-        broadcast_msg(user_list,buf,"huh");
+        broadcast_msg(user_list,buf,"admin");
 
       }
       }
