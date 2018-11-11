@@ -28,6 +28,7 @@ void main(int argc, char * argv[]) {
 
 	//printf("asdf");
 	fcntl(0, F_SETFL, fcntl(0, F_GETFL)| O_NONBLOCK);
+	fcntl(pipe_user_reading_from_server[0],F_SETFL,fcntl(pipe_user_reading_from_server[0],F_GETFL)|O_NONBLOCK);
 	int nbytes=0;
 	int len=0;
 	char buf[MAX_MSG];

@@ -386,7 +386,7 @@ int main(int argc, char * argv[])
       else{
 
         broadcast_msg(user_list,buf,"huh");
-        printf("writing to child");
+
       }
       }
 
@@ -402,7 +402,7 @@ int main(int argc, char * argv[])
     int i = 0;
 		for(i= 0; i < MAX_USER; i++){
         //poll all the children(loop through user list) and read.
-
+                memset(buf,0,MAX_MSG);
             		if(user_list[i].m_status == SLOT_FULL){   //check if index has user present.
         			       if((nbytes=read(user_list[i].m_fd_to_server,buf,MAX_MSG))>0){
 					 if (strncmp(buf,"\\list",4)==0){
