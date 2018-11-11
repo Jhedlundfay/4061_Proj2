@@ -135,11 +135,13 @@ int broadcast_msg(USER * user_list, char *buf, char *sender)
     if(user_list[i].m_status == SLOT_FULL){
       if(user_list[i].m_user_id != sender){
         if(strncmp(sender,"admin",5)==0){
-            write(user_list[i].m_fd_to_user,"admin:",6);
+            //write(user_list[i].m_fd_to_user,"admin:",6);
+	     write(user_list[i].m_fd_to_user,"\n",1);
         }
         char username[strlen(sender)+2];
         strncpy(username,sender,strlen(sender));
-        strcat(username,": ");
+        strcat(username," >> ");
+	 write(user_list[i].m_fd_to_user,"\n",1);
         write(user_list[i].m_fd_to_user,username,strlen(username));
         write(user_list[i].m_fd_to_user,buf,strlen(buf));
         memset(username,'\0',strlen(sender)+2);
@@ -233,13 +235,13 @@ void send_p2p_msg(int idx, USER * user_list, char *buf)
 {
 
 	char text_to_user[MAX_MSG];
-  int target_user_index = 0;
-  char username[MAX_USER_ID+1];
-  strncpy(username,user_list[idx].m_user_id,strlen(user_list[idx].m_user_id));
+  	int target_user_index = 0;
+  	char username[MAX_USER_ID+1];
+  	strncpy(username,user_list[idx].m_user_id,strlen(user_list[idx].m_user_id));
 	// get the target user by name using extract_name() function
 	char target_user[MAX_USER_ID];
 	extract_name(buf,target_user);
-  target_user[strlen(target_user)]='\0';
+  	target_user[strlen(target_user)]='\0';
 
 	// find the user id using find_user_index()
 	 if((target_user_index = find_user_index(user_list,target_user))==-1){
@@ -247,15 +249,15 @@ void send_p2p_msg(int idx, USER * user_list, char *buf)
 	    write(user_list[idx].m_fd_to_user,"User not found",14);
 	 }
 	 else{// if the user is found then write the message that the user wants to send to that user.
-    if(extract_text(buf,text_to_user)==-1){
-      write(user_list[idx].m_fd_to_user,"Unable to extract message",25);
-    }
-    else{
-    strcat(username,": ");
-    write(user_list[target_user_index].m_fd_to_user,username,strlen(username));
+   	 	if(extract_text(buf,text_to_user)==-1){
+     		 write(user_list[idx].m_fd_to_user,"Unable to extract message",25);
+    	 	}
+    		else{
+    		strcat(username,": ");
+    		write(user_list[target_user_index].m_fd_to_user,username,strlen(username));
 		write(user_list[target_user_index].m_fd_to_user,text_to_user,strlen(text_to_user));
-  }
-	 }
+  	        }
+    	}	
 
 
 }
@@ -334,8 +336,8 @@ int main(int argc, char * argv[])
   				perror("Failed to fork");  //get pid add user to user_list
 			}
 
-      if(pid > 0){ //server process adds user here
-	    signal(SIGTERM, SIG_IGN);
+      			if(pid > 0){ //server process adds user here
+	   			signal(SIGTERM, SIG_IGN);
             			int curpid = getpid();  //info needed to populate _userInfo
             			int slot = find_empty_slot(user_list);
             			if(slot == -1){
@@ -347,37 +349,37 @@ int main(int argc, char * argv[])
 
              		 	}
 		       }
-      else if(pid==0){ // Child process: poll users and SERVER
+     		       else if(pid==0){ // Child process: poll users and SERVER
 				     //close unused ends
-            fcntl(pipe_child_reading_from_user[0],F_SETFL,fcntl(pipe_child_reading_from_user[0],F_GETFL)|O_NONBLOCK);
-            fcntl(pipe_SERVER_writing_to_child[0],F_SETFL,fcntl(pipe_SERVER_writing_to_child[0],F_GETFL)|O_NONBLOCK);
+            			fcntl(pipe_child_reading_from_user[0],F_SETFL,fcntl(pipe_child_reading_from_user[0],F_GETFL)|O_NONBLOCK);
+            			fcntl(pipe_SERVER_writing_to_child[0],F_SETFL,fcntl(pipe_SERVER_writing_to_child[0],F_GETFL)|O_NONBLOCK);
     				close(pipe_child_writing_to_user[0]);
     				close(pipe_child_reading_from_user[1]);
-           	close(pipe_SERVER_writing_to_child[1]);
-           	close(pipe_SERVER_reading_from_child[0]);
-           	int index = find_user_index(user_list,user_id);
+           			close(pipe_SERVER_writing_to_child[1]);
+           			close(pipe_SERVER_reading_from_child[0]);
+           			int index = find_user_index(user_list,user_id);
             			//infinite loop handles communication between the user,child process, and the server
 
 				//formatting user_name print-out
 				    char *userIDprint = user_id;
 				    strcat(userIDprint,": ");
     				while(1){
-                memset(buf,0,MAX_MSG);
+               				 memset(buf,0,MAX_MSG);
       					if ((nbytes=read(pipe_child_reading_from_user[0],buf,MAX_MSG))>0){
-                  buf[nbytes] = '\0';
+                  				buf[nbytes] = '\0';
         					write(pipe_SERVER_reading_from_child[1],buf,nbytes);
-                     //for warm-up
+                     				//for warm-up
         				}
 
-                memset(buf,'\0',MAX_MSG);
-                if ((nbytes=read(pipe_SERVER_writing_to_child[0],buf,MAX_MSG))>0){
+                			memset(buf,'\0',MAX_MSG);
+                			if ((nbytes=read(pipe_SERVER_writing_to_child[0],buf,MAX_MSG))>0){
         					  write(pipe_child_writing_to_user[1],buf,nbytes);
-                     //for warm-up
+                     				//for warm-up
         				}else{
-                    write(0,"terret",6);
-                }
+                    				write(0,"terret",6);
+                			}
 
-              usleep(1000);
+              			usleep(1000);
       				//slow down polling?
 				}
         		}
@@ -428,48 +430,34 @@ int main(int argc, char * argv[])
 		close(pipe_SERVER_reading_from_child[1]);
 		close(pipe_SERVER_writing_to_child[0]);
 		fcntl(pipe_SERVER_reading_from_child[0],F_SETFL, fcntl(pipe_SERVER_reading_from_child[0],F_GETFL) | O_NONBLOCK);
-    int i = 0;
+    		int i = 0;
 		for(i= 0; i < MAX_USER; i++){
         //poll all the children(loop through user list) and read.
                 memset(buf,0,MAX_MSG);
                 if(user_list[i].m_status == SLOT_FULL){   //check if index has user present.
-        			       if((nbytes=read(user_list[i].m_fd_to_server,buf,MAX_MSG))>0){
-					                  if (strncmp(buf,"\\list",4)==0){
-					                         list_users(i,user_list);
-					                            }
-					                  else if (strncmp(buf,"\\exit",4)==0){
-                                   kick_user(i,user_list);
-					                    }
-					                  else if (strncmp(buf,"\\p2p",3)==0){
-								                   send_p2p_msg(i,user_list,buf);
-                                  /* int index;
-                                   char getname[MAX_USER_ID];
-                                   if(extract_name(buf,getname)==-1){
-                                     perror("missing user");
-                                     continue;
-                                   }
-                                   index = find_user_index(user_list,getname);
-                                   if(index==-1){
-                                     perror("Specified username not found");
-                                     continue;
-                                   }
-                                   char text[MAX_MSG];
-                                   extract_text(buf,text);
-                                   send_p2p_msg(index,user_list,text);*/
-				                  	 }
-					                  else {
-                                   broadcast_msg(user_list,buf,user_list[i].m_user_id);
-					                  }
+        		 if((nbytes=read(user_list[i].m_fd_to_server,buf,MAX_MSG))>0){
+				if (strncmp(buf,"\\list",4)==0){
+					list_users(i,user_list);
+				}
+				else if (strncmp(buf,"\\exit",4)==0){
+                                   	kick_user(i,user_list);
+				}
+				else if (strncmp(buf,"\\p2p",3)==0){
+					send_p2p_msg(i,user_list,buf);
+				}
+				else {
+                                   	broadcast_msg(user_list,buf,user_list[i].m_user_id);
+				}
 
-        			           }
-                		else{
+        		  }
+                	  else{
                            continue;
-				                 }
-			}
-      usleep(1000);
-      //end of for loop
+			  }
+	        }
+      		usleep(1000);
+     		//end of for loop
 
-		}
+	      }
 
 
 	   //end of while

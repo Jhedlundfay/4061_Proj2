@@ -33,6 +33,10 @@ void main(int argc, char * argv[]) {
 	int nbytes=0;
 	int len=0;
 	char buf[MAX_MSG];
+	
+	char *uIDprint = argv[1];
+	strcat(uIDprint," >> ");
+        write(1,uIDprint,strlen(uIDprint)); //print user prompt
 
 	while(1){
 		memset(buf,'\0',MAX_MSG);
@@ -40,11 +44,14 @@ void main(int argc, char * argv[]) {
 			//send user input to child
 			len=strlen(buf);
 			write(pipe_user_writing_to_server[1],buf,len);
+			write(1,"\n",1);
+			write(1,uIDprint,strlen(uIDprint)); //print user prompt
 		}
 		memset(buf,'\0',MAX_MSG);
 		if((nbytes=read(pipe_user_reading_from_server[0],buf,MAX_MSG)>0)){
-			write(0,buf,MAX_MSG);
-			write(0,"\n",2);
+			write(1,buf,MAX_MSG); //0 before
+			write(1,"\n",1);
+			write(1,uIDprint,strlen(uIDprint)); //print user prompt
 		}
 
 
