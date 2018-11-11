@@ -335,7 +335,6 @@ int main(int argc, char * argv[])
                 memset(buf,0,MAX_MSG);
       					if ((nbytes=read(pipe_child_reading_from_user[0],buf,MAX_MSG))>0){
                   buf[nbytes] = '\0';
-        					write(pipe_SERVER_reading_from_child[1],userIDprint,strlen(user_id));//for warm-up
         					write(pipe_SERVER_reading_from_child[1],buf,nbytes);
                      //for warm-up
         				}
