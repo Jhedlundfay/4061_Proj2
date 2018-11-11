@@ -135,12 +135,11 @@ int broadcast_msg(USER * user_list, char *buf, char *sender)
     if(user_list[i].m_status == SLOT_FULL){
       if(user_list[i].m_user_id != sender){
         if(strncmp(sender,"admin",5)==0){
-            //write(user_list[i].m_fd_to_user,"admin:",6);
 	     write(user_list[i].m_fd_to_user,"\n",1);
         }
         char username[strlen(sender)+2];
         strncpy(username,sender,strlen(sender));
-        strcat(username," >> ");
+        strcat(username," >> "); //keep formatting 
 	 write(user_list[i].m_fd_to_user,"\n",1);
         write(user_list[i].m_fd_to_user,username,strlen(username));
         write(user_list[i].m_fd_to_user,buf,strlen(buf));
@@ -236,8 +235,8 @@ void send_p2p_msg(int idx, USER * user_list, char *buf)
 
 	char text_to_user[MAX_MSG];
   	int target_user_index = 0;
-  	char username[MAX_USER_ID+1];
-  	strncpy(username,user_list[idx].m_user_id,strlen(user_list[idx].m_user_id));
+  	char u_name[MAX_USER_ID+1];
+  	strncpy(u_name,user_list[idx].m_user_id,strlen(user_list[idx].m_user_id));
 	// get the target user by name using extract_name() function
 	char target_user[MAX_USER_ID];
 	extract_name(buf,target_user);
@@ -253,12 +252,14 @@ void send_p2p_msg(int idx, USER * user_list, char *buf)
      		 write(user_list[idx].m_fd_to_user,"Unable to extract message",25);
     	 	}
     		else{
-    		strcat(username," >> ");
+    		strcat(u_name," >> ");//keep formatting
 		write(user_list[target_user_index].m_fd_to_user,"\n",1);
-    		write(user_list[target_user_index].m_fd_to_user,username,strlen(username));
+    		write(user_list[target_user_index].m_fd_to_user,u_name,strlen(u_name));
 		write(user_list[target_user_index].m_fd_to_user,text_to_user,strlen(text_to_user));
   	        }
-    	}	
+    	}
+	
+	 memset(u_name,'\0',strlen(u_name));//ensure formatting is kept 
 
 
 }
@@ -330,7 +331,6 @@ int main(int argc, char * argv[])
 
 			if (pipe(pipe_SERVER_reading_from_child) < 0 || pipe(pipe_SERVER_writing_to_child) < 0) {
   				perror("Failed to create pipes\n");
-  			     //?
 			}
 
 			if((pid=fork()) == -1){
@@ -361,9 +361,6 @@ int main(int argc, char * argv[])
            			int index = find_user_index(user_list,user_id);
             			//infinite loop handles communication between the user,child process, and the server
 
-				//formatting user_name print-out
-				    char *userIDprint = user_id;
-				    strcat(userIDprint,": ");
     				while(1){
                				 memset(buf,0,MAX_MSG);
       					if ((nbytes=read(pipe_child_reading_from_user[0],buf,MAX_MSG))>0){
@@ -388,14 +385,14 @@ int main(int argc, char * argv[])
 
     if(nbytes = read(1,buf,MAX_MSG)>0){
       buf[sizeof(buf)-1] = '\0';
-      print_prompt("admin");
+      print_prompt("admin");//keep formatting
       char username[MAX_USER_ID];
 
-      if(strncmp(buf,"\\list",4)==0){
+      if(strncmp(buf,"\\list",4)==0){//server list command
         list_users(-1,user_list);
-        print_prompt("admin");
+        print_prompt("admin");//keep formatting
       }
-      else if(strncmp(buf,"\\kick",4)==0){
+      else if(strncmp(buf,"\\kick",4)==0){//server kick command
         extract_name(buf,username);
         username[strlen(username)-1]='\0';
         int index = find_user_index(user_list,username);
@@ -407,7 +404,7 @@ int main(int argc, char * argv[])
           perror("User given is not in the list");
         }
       }
-      else if(strncmp(buf,"\\exit",4)==0){
+      else if(strncmp(buf,"\\exit",4)==0){//server exit command
           printf("Cleaning up users and exiting program\n");
           cleanup_users(user_list);
           exit(0);
@@ -423,24 +420,24 @@ int main(int argc, char * argv[])
 
 
 
-    //check for a command from admin
+                //check for a command from admin
 
 		close(pipe_SERVER_reading_from_child[1]);
 		close(pipe_SERVER_writing_to_child[0]);
 		fcntl(pipe_SERVER_reading_from_child[0],F_SETFL, fcntl(pipe_SERVER_reading_from_child[0],F_GETFL) | O_NONBLOCK);
     		int i = 0;
 		for(i= 0; i < MAX_USER; i++){
-        //poll all the children(loop through user list) and read.
+                //poll all the children(loop through user list) and read.
                 memset(buf,0,MAX_MSG);
                 if(user_list[i].m_status == SLOT_FULL){   //check if index has user present.
         		 if((nbytes=read(user_list[i].m_fd_to_server,buf,MAX_MSG))>0){
-				if (strncmp(buf,"\\list",4)==0){
+				if (strncmp(buf,"\\list",4)==0){//user list command
 					list_users(i,user_list);
 				}
-				else if (strncmp(buf,"\\exit",4)==0){
+				else if (strncmp(buf,"\\exit",4)==0){//user exit command
                                    	kick_user(i,user_list);
 				}
-				else if (strncmp(buf,"\\p2p",3)==0){
+				else if (strncmp(buf,"\\p2p",3)==0){//user p2p command
 					send_p2p_msg(i,user_list,buf);
 				}
 				else {
@@ -452,7 +449,8 @@ int main(int argc, char * argv[])
                            continue;
 			  }
 	        }
-      		usleep(1000);
+      		usleep(1000);//limit overhead
+
      		//end of for loop
 
 	      }

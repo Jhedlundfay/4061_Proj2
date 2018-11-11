@@ -49,7 +49,7 @@ void main(int argc, char * argv[]) {
 		}
 		memset(buf,'\0',MAX_MSG);
 		if((nbytes=read(pipe_user_reading_from_server[0],buf,MAX_MSG)>0)){
-			write(1,buf,MAX_MSG); //0 before
+			write(0,buf,MAX_MSG); 
 			write(1,"\n",1);
 			write(1,uIDprint,strlen(uIDprint)); //print user prompt
 		}
