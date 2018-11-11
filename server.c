@@ -405,10 +405,20 @@ int main(int argc, char * argv[])
 
             		if(user_list[i].m_status == SLOT_FULL){   //check if index has user present.
         			       if((nbytes=read(user_list[i].m_fd_to_server,buf,MAX_MSG))>0){
+					 if (strncmp(buf,"\\list",4)==0){
+					   int index = find_user_index(user_list,user_id);
+					   list_users(index,user_list);
+					   
+					 }
+					 else if (strncmp(buf,"\\exit",4)==0){
+					 }
+					 else if (strncmp(buf,"\\p2p",3)==0){
+					 }
+					 else {
                      write(user_list[i].m_fd_to_user,"hello",5);
                      printf("the length of buf is %ld",strlen(buf));
                      printf("%s",buf);
-
+					 }
 
         			}
                 		else{
