@@ -253,7 +253,8 @@ void send_p2p_msg(int idx, USER * user_list, char *buf)
      		 write(user_list[idx].m_fd_to_user,"Unable to extract message",25);
     	 	}
     		else{
-    		strcat(username,": ");
+    		strcat(username," >> ");
+		write(user_list[target_user_index].m_fd_to_user,"\n",1);
     		write(user_list[target_user_index].m_fd_to_user,username,strlen(username));
 		write(user_list[target_user_index].m_fd_to_user,text_to_user,strlen(text_to_user));
   	        }
@@ -308,7 +309,7 @@ int main(int argc, char * argv[])
 /* ------------------------YOUR CODE FOR MAIN-------------------------------------------------------------------------------------------*/
 
 	int len=0;//for string length later
-  print_prompt("admin");
+  	print_prompt("admin");
 	while(1) {
 
 
@@ -375,9 +376,7 @@ int main(int argc, char * argv[])
                 			if ((nbytes=read(pipe_SERVER_writing_to_child[0],buf,MAX_MSG))>0){
         					  write(pipe_child_writing_to_user[1],buf,nbytes);
                      				//for warm-up
-        				}else{
-                    				write(0,"terret",6);
-                			}
+        				}
 
               			usleep(1000);
       				//slow down polling?
@@ -394,20 +393,19 @@ int main(int argc, char * argv[])
 
       if(strncmp(buf,"\\list",4)==0){
         list_users(-1,user_list);
-        //extract_name(buf,username);
-        //broadcast_msg(user_list,buf,username);
+        print_prompt("admin");
       }
       else if(strncmp(buf,"\\kick",4)==0){
         extract_name(buf,username);
         username[strlen(username)-1]='\0';
         int index = find_user_index(user_list,username);
-        printf("The pid is %d",getpid());
+        //printf("The pid is %d",getpid());
         if(index !=-1){
           kick_user(index,user_list);
         }
         else{
           perror("User given is not in the list");
-            }
+        }
       }
       else if(strncmp(buf,"\\exit",4)==0){
           printf("Cleaning up users and exiting program\n");
